@@ -652,6 +652,16 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t20_finish</id>
+			<actions phase="pre">
+				<action>
+					requester: f.requester;
+
+					change requester value { loggedUser().email }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t21</id>
@@ -661,12 +671,34 @@
 			<offset>0</offset>
 		</layout>
 		<label>Unregistrate [auto]</label>
+		<trigger type="auto"/>
 		<roleRef>
 			<id>system</id>
 			<logic>
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t21_finish</id>
+			<actions phase="pre">
+				<action>
+					registered_players: f.registered_players,
+					requester: f.requester;
+
+					def playersSet = registered_players.choices.collect{ it.defaultValue }
+					playersSet.remove(requester.value)
+
+					change registered_players choices { playersSet }
+				</action>
+			</actions>
+			<actions phase="post">
+				<action>
+					requester: f.requester;
+
+					change requester value { null }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t22</id>
