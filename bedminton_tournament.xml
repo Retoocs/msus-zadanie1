@@ -62,7 +62,7 @@
 	<data type="number">
 		<id>able_generate</id>
 		<title>To [able to generate]</title>
-		<init>1</init>
+		<init>0</init>
 	</data>
 	<data type="number">
 		<id>generated_count</id>
@@ -331,7 +331,7 @@
 					registered_players: f.registered_players,
 					requester: f.requester;
 
-					if(registered_players.choices.size() &lt; capacity.value.defaultValue){
+					if(registered_players.choices.collect{ it.defaultValue }.size() &lt; Integer.valueOf(capacity.value.defaultValue)){
 						change request_accepted value { return 1 }
 					}
 					else {
@@ -625,6 +625,9 @@
 			<offset>0</offset>
 		</layout>
 		<label>Check ability to generate [time]</label>
+		<trigger type="time">
+			<delay>PT60M</delay>
+		</trigger>
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -637,6 +640,39 @@
 				<view>true</view>
 			</logic>
 		</roleRef>
+		<event type="assign">
+			<id>t19_assign</id>
+			<actions phase="post">
+				<action>
+					tournament_capacity: f.tournament_capacity,
+					registered_players: f.registered_players,
+					unable_generate: f.unable_generate,
+					able_generate: f.able_generate;
+
+					def registered_count = registered_players.choices.collect{ it.defaultValue }.size()
+					def capacity = Integer.valueOf(tournament_capacity.value.defaultValue)
+
+					if(registered_count == capacity){
+						change able_generate value { return 1; }
+					}
+					else {
+						change unable_generate value { return 1; }
+					}
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>t19_finish</id>
+			<actions phase="post">
+				<action>
+					unable_generate: f.unable_generate,
+					able_generate: f.able_generate;
+
+					change able_generate value { return 0; }
+					change unable_generate value { return 0; }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t20</id>
