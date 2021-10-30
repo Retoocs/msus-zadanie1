@@ -52,7 +52,7 @@
 	<data type="number">
 		<id>request_accepted</id>
 		<title>To [register requester]</title>
-		<init>1</init>
+		<init>0</init>
 	</data>
 	<data type="number">
 		<id>unable_generate</id>
@@ -79,10 +79,12 @@
 		<title>Tournament name</title>
 		<init>A tournament</init>
 	</data>
-	<data type="number">
+	<data type="enumeration">
 		<id>tournament_capacity</id>
 		<title>Total number of players</title>
-		<init>20</init>
+		<values>8</values>
+		<values>16</values>
+		<init>8</init>
 	</data>
 	<data type="enumeration">
 		<id>tournament_type</id>
@@ -97,7 +99,7 @@
 		<init>Here write something about the tournament (Start date, duration, prize pool, ...)</init>
 	</data>
 	<data type="taskRef">
-		<id>create_tournament_informations</id>
+		<id>tournament_informations</id>
 		<title></title>
 		<init>t25</init>
 	</data>
@@ -105,16 +107,6 @@
 		<id>delete_confirmation</id>
 		<title></title>
 		<init>Confirm to delete the tournament</init>
-	</data>
-	<data type="taskRef">
-		<id>view_tournament_informations</id>
-		<title></title>
-		<init>t25</init>
-	</data>
-	<data type="taskRef">
-		<id>edit_tournament_informations</id>
-		<title></title>
-		<init>t25</init>
 	</data>
 	<data type="number">
 		<id>player_played_matches</id>
@@ -146,11 +138,27 @@
 			change lost value { return loggedUser().email.size() }
 		</action>
 	</data>
-	<data type="text">
+	<data type="enumeration_map">
 		<id>player_matches</id>
 		<title>Your matches</title>
+	</data>
+	<data type="text">
+		<id>all_matches</id>
+		<title>all_matches</title>
 		<values>area</values>
-		<init>none</init>
+	</data>
+	<data type="number">
+		<id>match_counter</id>
+		<title>match_counter</title>
+		<init>0</init>
+	</data>
+	<data type="enumeration">
+		<id>registered_players</id>
+		<title>Registrovany hraci</title>
+	</data>
+	<data type="text">
+		<id>requester</id>
+		<title>requester</title>
 	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
@@ -177,7 +185,7 @@
 		<dataGroup>
 			<id>DataGroup</id>
 			<dataRef>
-				<id>create_tournament_informations</id>
+				<id>tournament_informations</id>
 				<logic>
 					<behavior>editable</behavior>
 					<behavior>required</behavior>
@@ -214,9 +222,9 @@
 		<dataGroup>
 			<id>DataGroup</id>
 			<dataRef>
-				<id>view_tournament_informations</id>
+				<id>tournament_informations</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>visible</behavior>
 				</logic>
 			</dataRef>
 		</dataGroup>
@@ -250,6 +258,16 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
+		<event type="finish">
+			<id>t4_finish</id>
+			<actions phase="post">
+				<action>
+					async.run{
+						workflowService.deleteCase(useCase.stringId);
+					}
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t5</id>
@@ -265,6 +283,28 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="assign">
+			<id>t5_assign</id>
+			<actions phase="pre">
+				<action>
+					registered_players: f.registered_players;
+
+					/*if(registered_players.choices.collect{ it.defaultValue }.contains(loggedUser().email)){
+						throw new IllegalArgumentException("Uz ste zaregistrovany!")
+					}*/
+				</action>
+			</actions>
+		</event>
+		<event type="finish">
+			<id>t5_finish</id>
+			<actions phase="pre">
+				<action>
+					requester: f.requester;
+
+					change requester value { loggedUser().email }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t6</id>
@@ -274,12 +314,32 @@
 			<offset>0</offset>
 		</layout>
 		<label>Check availability [auto]</label>
+		<trigger type="auto"/>
 		<roleRef>
 			<id>system</id>
 			<logic>
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="assign">
+			<id>t6_assign</id>
+			<actions phase="post">
+				<action>
+					request_accepted: f.request_accepted,
+					request_denied: f.request_denied,
+					capacity: f.tournament_capacity,
+					registered_players: f.registered_players,
+					requester: f.requester;
+
+					if(registered_players.choices.size() &lt; capacity.value.defaultValue){
+						change request_accepted value { return 1 }
+					}
+					else {
+						change request_denied value { return 1 }
+					}
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t7</id>
@@ -289,12 +349,27 @@
 			<offset>0</offset>
 		</layout>
 		<label>Reinitialize request data [auto]</label>
+		<trigger type="auto"/>
 		<roleRef>
 			<id>system</id>
 			<logic>
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t7_finish</id>
+			<actions phase="pre">
+				<action>
+					request_accepted: f.request_accepted,
+					request_denied: f.request_denied,
+					requester: f.requester;
+
+					change request_accepted value { return 0 }
+					change request_denied value { return 0 }
+					change requester value { return null }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t8</id>
@@ -304,12 +379,24 @@
 			<offset>0</offset>
 		</layout>
 		<label>Register requester [auto]</label>
+		<trigger type="auto"/>
 		<roleRef>
 			<id>system</id>
 			<logic>
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t8_finish</id>
+			<actions phase="pre">
+				<action>
+					registered_players: f.registered_players,
+					requester: f.requester;
+
+					change registered_players choices { registered_players.choices + [requester.value] }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t9</id>
@@ -480,7 +567,7 @@
 		<dataGroup>
 			<id>DataGroup</id>
 			<dataRef>
-				<id>edit_tournament_informations</id>
+				<id>tournament_informations</id>
 				<logic>
 					<behavior>editable</behavior>
 					<behavior>required</behavior>
@@ -686,6 +773,12 @@
 				<logic>
 					<behavior>editable</behavior>
 					<behavior>required</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>registered_players</id>
+				<logic>
+					<behavior>editable</behavior>
 				</logic>
 			</dataRef>
 		</dataGroup>
