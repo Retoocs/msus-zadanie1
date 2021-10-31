@@ -82,10 +82,12 @@
 	<data type="enumeration">
 		<id>tournament_capacity</id>
 		<title>Total number of players</title>
-		<values>2</values>
+		<values>4</values>
+		<values>5</values>
+		<values>6</values>
+		<values>7</values>
 		<values>8</values>
-		<values>16</values>
-		<init>8</init>
+		<init>4</init>
 	</data>
 	<data type="enumeration">
 		<id>tournament_type</id>
@@ -150,6 +152,8 @@
 		<id>registered_players</id>
 		<title>Registrovany hraci</title>
 		<values>G</values>
+		<values>H</values>
+		<values>I</values>
 		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="button">
@@ -176,6 +180,10 @@
 		<id>stats_unplayed</id>
 		<title>Number of unplayed matches</title>
 	</data>
+	<data type="text">
+		<id>status</id>
+		<title>Status</title>
+	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -187,7 +195,6 @@
 		</layout>
 		<label>Create tournament</label>
 		<assignPolicy>auto</assignPolicy>
-
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -210,6 +217,31 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
+		<event type="cancel">
+			<id>t1_cancel</id>
+			<title/>
+		</event>
+		<event type="delegate">
+			<id>t1_delegate</id>
+			<title/>
+		</event>
+		<event type="finish">
+			<id>t1_finish</id>
+			<title>Create tournament</title>
+			<actions phase="post">
+				<action>
+					t25: t.t25,
+					status: f.status,
+					all_matches: f.all_matches,
+					registered_players: f.registered_players;
+
+					make registered_players,editable on t25 when {true}
+					make status,visible on t25 when {true}
+
+					change status value { "Registration phase" }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t2</id>
@@ -246,6 +278,22 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>t2_assign</id>
+			<title/>
+		</event>
+		<event type="cancel">
+			<id>t2_cancel</id>
+			<title/>
+		</event>
+		<event type="finish">
+			<id>t2_finish</id>
+			<title/>
+		</event>
+		<event type="delegate">
+			<id>t2_delegate</id>
+			<title/>
+		</event>
 	</transition>
 	<transition>
 		<id>t4</id>
@@ -278,6 +326,7 @@
 		</dataGroup>
 		<event type="finish">
 			<id>t4_finish</id>
+			<title>Delete tournament</title>
 			<actions phase="post">
 				<action>
 					async.run{
@@ -285,6 +334,18 @@
 					}
 				</action>
 			</actions>
+		</event>
+		<event type="cancel">
+			<id>t4_cancel</id>
+			<title>Go back</title>
+		</event>
+		<event type="delegate">
+			<id>t4_delegate</id>
+			<title/>
+		</event>
+		<event type="assign">
+			<id>t4_assign</id>
+			<title>Start deleting</title>
 		</event>
 	</transition>
 	<transition>
@@ -303,6 +364,7 @@
 		</roleRef>
 		<event type="assign">
 			<id>t5_assign</id>
+			<title>Start requesting</title>
 			<actions phase="pre">
 				<action>
 					registered_players: f.registered_players;
@@ -315,6 +377,7 @@
 		</event>
 		<event type="finish">
 			<id>t5_finish</id>
+			<title>Post request</title>
 			<actions phase="pre">
 				<action>
 					requester: f.requester;
@@ -322,6 +385,14 @@
 					change requester value { loggedUser().email }
 				</action>
 			</actions>
+		</event>
+		<event type="delegate">
+			<id>t5_delegate</id>
+			<title/>
+		</event>
+		<event type="cancel">
+			<id>t5_cancel</id>
+			<title>Cancel requesting</title>
 		</event>
 	</transition>
 	<transition>
@@ -443,65 +514,118 @@
 				<id>player_played_matches</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						player_played_matches: f.this,
+						all_matches: f.all_matches;
+
+						def tmpPlayed = 0
+
+						if(all_matches.options != null){
+							def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
+							def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
+
+							for(entry in tmpPlayerMatches){
+								splitValue = entry.value.split(',')
+								if(splitValue[4] == "false")
+									tmpPlayed++
+							}
+						}
+
+						change player_played_matches value { return tmpPlayed; }
+					</action>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>player_unplayed_matches</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						player_unplayed_matches: f.player_unplayed_matches,
+						all_matches: f.all_matches;
+
+						def tmpUnplayed = 0
+
+						if(all_matches.options != null){
+							def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
+							def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
+
+							for(entry in tmpPlayerMatches){
+								splitValue = entry.value.split(',')
+								if(splitValue[4] == "true")
+									tmpUnplayed++
+							}
+						}
+
+						change player_unplayed_matches value { return tmpUnplayed; }
+					</action>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>player_won_matches</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						player_won_matches: f.player_won_matches,
+						all_matches: f.all_matches;
+
+						def tmpWon = 0
+
+						if(all_matches.options != null){
+							def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
+							def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
+
+							for(entry in tmpPlayerMatches){
+								splitValue = entry.value.split(',')
+								if(splitValue[5] == loggedUser().email)
+									tmpWon++
+							}
+						}
+
+						change player_won_matches value { return tmpWon; }
+					</action>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>player_lost_matches</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						player_lost_matches: f.player_lost_matches,
+						all_matches: f.all_matches;
+
+						def tmpLost = 0
+
+						if(all_matches.options != null){
+							def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
+							def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
+
+							for(entry in tmpPlayerMatches){
+								splitValue = entry.value.split(',')
+								if(splitValue[6] == loggedUser().email)
+									tmpLost++
+							}
+						}
+
+						change player_lost_matches value { return tmpLost; }
+					</action>
 				</logic>
 			</dataRef>
 		</dataGroup>
 		<event type="assign">
 			<id>t9_assign</id>
-			<actions phase="pre">
-				<action>
-					player_played_matches: f.player_played_matches,
-					player_unplayed_matches: f.player_unplayed_matches,
-					player_won_matches: f.player_won_matches,
-					player_lost_matches: f.player_lost_matches,
-					all_matches: f.all_matches;
-
-					def tmpPlayed = 0
-					def tmpUnplayed = 0
-					def tmpWon = 0
-					def tmpLost = 0
-
-					if(all_matches.options != null){
-						def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
-						def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
-
-						for(entry in tmpPlayerMatches){
-							splitValue = entry.value.split(',')
-							if(splitValue[4] == "true")
-								tmpUnplayed++
-							if(splitValue[4] == "false")
-								tmpPlayed++
-							if(splitValue[5] == loggedUser().email)
-								tmpWon++
-							if(splitValue[6] == loggedUser().email)
-								tmpLost++
-						}
-					}
-
-					change player_lost_matches value { return tmpLost; }
-					change player_played_matches value { return tmpPlayed; }
-					change player_unplayed_matches value { return tmpUnplayed; }
-					change player_won_matches value { return tmpWon; }
-				</action>
-			</actions>
+			<title/>
+		</event>
+		<event type="cancel">
+			<id>t9_cancel</id>
+			<title/>
+		</event>
+		<event type="finish">
+			<id>t9_finish</id>
+			<title/>
+		</event>
+		<event type="delegate">
+			<id>t9_delegate</id>
+			<title/>
 		</event>
 	</transition>
 	<transition>
@@ -523,6 +647,7 @@
 			<id>t10_finish</id>
 			<actions phase="pre">
 				<action>
+					status: f.status,
 					finished_matches_count: f.finished_matches_count,
 					generated_count: f.generated_count,
 					match_counter: f.match_counter,
@@ -555,6 +680,7 @@
 					}
 					change generated_count value { match_counter.value }
 					change finished_matches_count value { match_counter.value }
+					change status value { "Ongoing tournament" }
 				</action>
 			</actions>
 		</event>
@@ -599,6 +725,7 @@
 		</dataGroup>
 		<event type="assign">
 			<id>t12_assign</id>
+			<title>Start inserting</title>
 			<actions phase="pre">
 				<action>
 					t12: t.t12,
@@ -619,6 +746,7 @@
 		</event>
 		<event type="cancel">
 			<id>t12_cancel</id>
+			<title>Cancel inserting</title>
 			<actions phase="pre">
 				<action>
 					player_matches_view: f.player_matches_view,
@@ -629,6 +757,14 @@
 					change player_score value { null }
 				</action>
 			</actions>
+		</event>
+		<event type="finish">
+			<id>t12_finish</id>
+			<title>Submit result</title>
+		</event>
+		<event type="delegate">
+			<id>t12_delegate</id>
+			<title/>
 		</event>
 	</transition>
 	<transition>
@@ -690,15 +826,6 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
-		<dataGroup>
-			<id>DataGroup</id>
-			<dataRef>
-				<id>test</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-			</dataRef>
-		</dataGroup>
 		<event type="finish">
 			<id>t27_finish</id>
 			<actions phase="post">
@@ -790,6 +917,22 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>t16_assign</id>
+			<title>Start editing</title>
+		</event>
+		<event type="cancel">
+			<id>t16_cancel</id>
+			<title>Cancel editing</title>
+		</event>
+		<event type="finish">
+			<id>t16_finish</id>
+			<title>Finish editing</title>
+		</event>
+		<event type="delegate">
+			<id>t16_delegate</id>
+			<title/>
+		</event>
 	</transition>
 	<transition>
 		<id>t18</id>
@@ -799,6 +942,7 @@
 			<offset>0</offset>
 		</layout>
 		<label>Validate tournament finish</label>
+		<assignPolicy>auto</assignPolicy>
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -811,6 +955,28 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="assign">
+			<id>t18_assign</id>
+			<title/>
+		</event>
+		<event type="delegate">
+			<id>t18_delegate</id>
+			<title/>
+		</event>
+		<event type="cancel">
+			<id>t18_cancel</id>
+			<title>Cancel validing</title>
+		</event>
+		<event type="finish">
+			<id>t18_finish</id>
+			<title>Validate tournament</title>
+			<actions phase="post">
+				<action>
+					status: f.status;
+					change status value { "Tournament has been finished" }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t19</id>
@@ -821,7 +987,7 @@
 		</layout>
 		<label>Check ability to generate [time]</label>
 		<trigger type="time">
-			<delay>PT60M</delay>
+			<delay>PT10S</delay>
 		</trigger>
 		<roleRef>
 			<id>system</id>
@@ -883,8 +1049,17 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="assign">
+			<id>t20_assign</id>
+			<title>Start unregistrating</title>
+		</event>
+		<event type="cancel">
+			<id>t20_cancel</id>
+			<title>Do not unregistrate</title>
+		</event>
 		<event type="finish">
 			<id>t20_finish</id>
+			<title>Unregistrate</title>
 			<actions phase="pre">
 				<action>
 					requester: f.requester;
@@ -892,6 +1067,10 @@
 					change requester value { loggedUser().email }
 				</action>
 			</actions>
+		</event>
+		<event type="delegate">
+			<id>t20_delegate</id>
+			<title/>
 		</event>
 	</transition>
 	<transition>
@@ -963,51 +1142,84 @@
 				<id>stats_all_matches</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						all_matches: f.all_matches,
+						all: f.stats_all_matches;
+
+						def tmpAll = 0
+
+						if(all_matches.options != null){
+							def allMatches = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+							tmpAll = allMatches.size()
+						}
+
+						change all value { return tmpAll; }
+					</action>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>stats_played</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						all_matches: f.all_matches,
+						played: f.stats_played;
+
+						def tmpPlayed = 0
+
+						if(all_matches.options != null){
+							def allMatches = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+
+							for(entry in allMatches){
+								if(entry.value.split(',')[4] == "false")
+									tmpPlayed++
+							}
+						}
+
+						change played value { return tmpPlayed; }
+					</action>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>stats_unplayed</id>
 				<logic>
 					<behavior>visible</behavior>
+					<action trigger="get">
+						all_matches: f.all_matches,
+						unplayed: f.stats_unplayed;
+
+						def tmpUnplayed = 0
+
+						if(all_matches.options != null){
+							def allMatches = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+							tmpAll = allMatches.size()
+
+							for(entry in allMatches){
+								if(entry.value.split(',')[4] == "true")
+									tmpUnplayed++
+							}
+						}
+
+						change unplayed value { return tmpUnplayed; }
+					</action>
 				</logic>
 			</dataRef>
 		</dataGroup>
 		<event type="assign">
 			<id>t22_assign</id>
-			<actions phase="pre">
-				<action>
-					all_matches: f.all_matches,
-					all: f.stats_all_matches,
-					played: f.stats_played,
-					unplayed: f.stats_unplayed;
-
-					def tmpAll = 0
-					def tmpPlayed = 0
-					def tmpUnplayed = 0
-
-					if(all_matches.options != null){
-						def allMatches = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
-						tmpAll = allMatches.size()
-
-						for(entry in allMatches){
-							if(entry.value.split(',')[4] == "true")
-								tmpUnplayed++
-							if(entry.value.split(',')[4] == "false")
-								tmpPlayed++
-						}
-					}
-
-					change all value { return tmpAll; }
-					change played value { return tmpPlayed; }
-					change unplayed value { return tmpUnplayed; }
-				</action>
-			</actions>
+			<title/>
+		</event>
+		<event type="finish">
+			<id>t22_finish</id>
+			<title/>
+		</event>
+		<event type="cancel">
+			<id>t22_cancel</id>
+			<title/>
+		</event>
+		<event type="delegate">
+			<id>t22_delegate</id>
+			<title/>
 		</event>
 	</transition>
 	<transition>
@@ -1105,6 +1317,22 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>t24_assign</id>
+			<title>Start managing</title>
+		</event>
+		<event type="finish">
+			<id>t24_finish</id>
+			<title>Finish managing</title>
+		</event>
+		<event type="cancel">
+			<id>t24_cancel</id>
+			<title>Cancel managing</title>
+		</event>
+		<event type="delegate">
+			<id>t24_delegate</id>
+			<title/>
+		</event>
 	</transition>
 	<transition>
 		<id>t25</id>
@@ -1153,13 +1381,19 @@
 			<dataRef>
 				<id>registered_players</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>hidden</behavior>
 				</logic>
 			</dataRef>
 			<dataRef>
 				<id>all_matches</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>hidden</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>status</id>
+				<logic>
+					<behavior>hidden</behavior>
 				</logic>
 			</dataRef>
 		</dataGroup>
