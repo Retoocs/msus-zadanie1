@@ -67,7 +67,7 @@
 	<data type="number">
 		<id>generated_count</id>
 		<title>To [matches generated]</title>
-		<init>2</init>
+		<init>0</init>
 	</data>
 	<data type="number">
 		<id>finished_matches_count</id>
@@ -493,6 +493,7 @@
 			<offset>0</offset>
 		</layout>
 		<label>generate matches [auto]</label>
+		<trigger type="auto"/>
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -503,6 +504,7 @@
 			<id>t10_finish</id>
 			<actions phase="pre">
 				<action>
+					generated_count: f.generated_count,
 					match_counter: f.match_counter,
 					tournament_capacity: f.tournament_capacity,
 					registered_players: f.registered_players,
@@ -523,6 +525,7 @@
 						}
 					}
 
+					change generated_count value { match_counter.value }
 					change all_matches value { tmpAllMatches }
 				</action>
 			</actions>
@@ -531,7 +534,7 @@
 	<transition>
 		<id>t12</id>
 		<x>1140</x>
-		<y>700</y>
+		<y>740</y>
 		<layout>
 			<offset>0</offset>
 		</layout>
@@ -886,6 +889,38 @@
 			</dataRef>
 		</dataGroup>
 	</transition>
+	<transition>
+		<id>t26</id>
+		<x>1380</x>
+		<y>620</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Process the input [auto]</label>
+<!--		<trigger type="auto"/>-->
+		<roleRef>
+			<id>system</id>
+			<logic>
+				<perform>true</perform>
+			</logic>
+		</roleRef>
+	</transition>
+	<transition>
+		<id>t27</id>
+		<x>980</x>
+		<y>620</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Reinitialize input data [auto]</label>
+<!--		<trigger type="auto"/>-->
+		<roleRef>
+			<id>system</id>
+			<logic>
+				<perform>true</perform>
+			</logic>
+		</roleRef>
+	</transition>
 	<!-- PLACES -->
 	<place>
 		<id>p1</id>
@@ -1007,6 +1042,22 @@
 		<tokens>0</tokens>
 		<static>false</static>
 	</place>
+	<place>
+		<id>p21</id>
+		<x>1380</x>
+		<y>740</y>
+		<label>inserted</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>p23</id>
+		<x>1140</x>
+		<y>620</y>
+		<label>processed</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
 	<!-- ARCS -->
 	<arc>
 		<id>a1</id>
@@ -1084,7 +1135,7 @@
 		<type>regular</type>
 		<sourceId>t6</sourceId>
 		<destinationId>p8</destinationId>
-		<multiplicity>1</multiplicity>
+		<multiplicity>0</multiplicity>
 		<reference>request_accepted</reference>
 	</arc>
 	<arc>
@@ -1129,13 +1180,6 @@
 		<destinationId>p11</destinationId>
 		<multiplicity>2</multiplicity>
 		<reference>generated_count</reference>
-	</arc>
-	<arc>
-		<id>a25</id>
-		<type>read</type>
-		<sourceId>p11</sourceId>
-		<destinationId>t12</destinationId>
-		<multiplicity>1</multiplicity>
 	</arc>
 	<arc>
 		<id>a27</id>
@@ -1206,7 +1250,7 @@
 		<type>regular</type>
 		<sourceId>t19</sourceId>
 		<destinationId>p18</destinationId>
-		<multiplicity>1</multiplicity>
+		<multiplicity>0</multiplicity>
 		<reference>able_generate</reference>
 	</arc>
 	<arc>
@@ -1308,6 +1352,64 @@
 		<type>regular</type>
 		<sourceId>t24</sourceId>
 		<destinationId>p3</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a53</id>
+		<type>regular</type>
+		<sourceId>p11</sourceId>
+		<destinationId>t12</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a54</id>
+		<type>regular</type>
+		<sourceId>t12</sourceId>
+		<destinationId>p21</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>1260</x><y>708</y></breakPoint>
+	</arc>
+	<arc>
+		<id>a55</id>
+		<type>regular</type>
+		<sourceId>p21</sourceId>
+		<destinationId>t26</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a56</id>
+		<type>regular</type>
+		<sourceId>t26</sourceId>
+		<destinationId>p23</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a57</id>
+		<type>regular</type>
+		<sourceId>p23</sourceId>
+		<destinationId>t27</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a58</id>
+		<type>regular</type>
+		<sourceId>t27</sourceId>
+		<destinationId>p11</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a59</id>
+		<type>inhibitor</type>
+		<sourceId>p21</sourceId>
+		<destinationId>t12</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>1265</x><y>768</y></breakPoint>
+	</arc>
+	<arc>
+		<id>a60</id>
+		<type>inhibitor</type>
+		<sourceId>p23</sourceId>
+		<destinationId>t12</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>
 </document>
