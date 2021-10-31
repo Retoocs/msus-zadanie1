@@ -24,7 +24,7 @@
 		<id>organizator</id>
 		<caseLogic>
 			<create>true</create>
-			<delete>true</delete>
+<!--			<delete>true</delete>-->
 			<view>true</view>
 		</caseLogic>
 	</roleRef>
@@ -150,15 +150,17 @@
 	</data>
 	<data type="enumeration">
 		<id>registered_players</id>
-		<title>Registrovany hraci</title>
+		<title>Registered players</title>
+		<view>
+			<list/>
+		</view>
 		<values>G</values>
-		<values>H</values>
-		<values>I</values>
 		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="button">
 		<id>delete_player</id>
-		<title>Delete selected player</title>
+		<title/>
+		<placeholder>Delete selected player</placeholder>
 	</data>
 	<data type="text">
 		<id>requester</id>
@@ -209,6 +211,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>tournament_informations</id>
 				<logic>
@@ -235,7 +238,6 @@
 					all_matches: f.all_matches,
 					registered_players: f.registered_players;
 
-					make registered_players,editable on t25 when {true}
 					make status,visible on t25 when {true}
 
 					change status value { "Registration phase" }
@@ -317,6 +319,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>delete_confirmation</id>
 				<logic>
@@ -510,6 +513,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>player_played_matches</id>
 				<logic>
@@ -701,6 +705,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>player_matches_view</id>
 				<logic>
@@ -909,6 +914,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>tournament_informations</id>
 				<logic>
@@ -993,12 +999,6 @@
 			<id>system</id>
 			<logic>
 				<perform>true</perform>
-			</logic>
-		</roleRef>
-		<roleRef>
-			<id>organizator</id>
-			<logic>
-				<view>true</view>
 			</logic>
 		</roleRef>
 		<event type="assign">
@@ -1138,6 +1138,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>stats_all_matches</id>
 				<logic>
@@ -1201,6 +1202,17 @@
 						}
 
 						change unplayed value { return tmpUnplayed; }
+					</action>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>registered_players</id>
+				<logic>
+					<behavior>editable</behavior>
+					<action trigger="set">
+						registered_players: f.this;
+
+						change registered_players value { null }
 					</action>
 				</logic>
 			</dataRef>
@@ -1295,6 +1307,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>registered_players</id>
 				<logic>
@@ -1350,6 +1363,7 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
+			<stretch>true</stretch>
 			<dataRef>
 				<id>tournament_name</id>
 				<logic>
@@ -1376,18 +1390,6 @@
 				<logic>
 					<behavior>editable</behavior>
 					<behavior>required</behavior>
-				</logic>
-			</dataRef>
-			<dataRef>
-				<id>registered_players</id>
-				<logic>
-					<behavior>hidden</behavior>
-				</logic>
-			</dataRef>
-			<dataRef>
-				<id>all_matches</id>
-				<logic>
-					<behavior>hidden</behavior>
 				</logic>
 			</dataRef>
 			<dataRef>
