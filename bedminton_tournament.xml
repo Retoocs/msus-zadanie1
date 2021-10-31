@@ -176,10 +176,6 @@
 		<id>stats_unplayed</id>
 		<title>Number of unplayed matches</title>
 	</data>
-	<data type="text">
-		<id>test</id>
-		<title>test</title>
-	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -794,27 +790,6 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
-	</transition>
-	<transition>
-		<id>t17</id>
-		<x>260</x>
-		<y>860</y>
-		<layout>
-			<offset>0</offset>
-		</layout>
-		<label>Edit a specific match</label>
-		<roleRef>
-			<id>organizator</id>
-			<logic>
-				<perform>true</perform>
-			</logic>
-		</roleRef>
-		<roleRef>
-			<id>system</id>
-			<logic>
-				<perform>true</perform>
-			</logic>
-		</roleRef>
 	</transition>
 	<transition>
 		<id>t18</id>
@@ -1475,13 +1450,6 @@
 		<type>regular</type>
 		<sourceId>t15</sourceId>
 		<destinationId>p14</destinationId>
-		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
-		<id>a33</id>
-		<type>read</type>
-		<sourceId>p16</sourceId>
-		<destinationId>t17</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>
 	<arc>
