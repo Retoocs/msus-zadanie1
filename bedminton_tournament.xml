@@ -85,7 +85,7 @@
 		<values>2</values>
 		<values>8</values>
 		<values>16</values>
-		<init>2</init>
+		<init>8</init>
 	</data>
 	<data type="enumeration">
 		<id>tournament_type</id>
@@ -143,6 +143,10 @@
 		<id>player_matches</id>
 		<title>Your matches</title>
 	</data>
+	<data type="number">
+		<id>player_score</id>
+		<title>Your score (sets)</title>
+	</data>
 	<data type="enumeration_map">
 		<id>all_matches</id>
 		<title>all_matches</title>
@@ -181,6 +185,7 @@
 			<offset>0</offset>
 		</layout>
 		<label>Create tournament</label>
+		<assignPolicy>auto</assignPolicy>
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -300,9 +305,9 @@
 				<action>
 					registered_players: f.registered_players;
 
-					/*if(registered_players.choices.collect{ it.defaultValue }.contains(loggedUser().email)){
+					if(registered_players.choices.collect{ it.defaultValue }.contains(loggedUser().email)){
 						throw new IllegalArgumentException("Uz ste zaregistrovany!")
-					}*/
+					}
 				</action>
 			</actions>
 		</event>
@@ -529,7 +534,7 @@
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",0,0,true,"
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",tbd,tbd,true,"
 							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
 
@@ -565,9 +570,23 @@
 		<dataGroup>
 			<id>DataGroup</id>
 			<dataRef>
-				<id>test</id>
+				<id>player_matches</id>
 				<logic>
 					<behavior>editable</behavior>
+					<action trigger="set">
+						player_matches: f.this,
+						t12: t.t12,
+						player_score: f.player_score;
+
+						make player_score,editable on t12 when {true}
+					</action>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>player_score</id>
+				<logic>
+					<behavior>hidden</behavior>
+					<behavior>required</behavior>
 				</logic>
 			</dataRef>
 		</dataGroup>
@@ -575,15 +594,29 @@
 			<id>t12_assign</id>
 			<actions phase="pre">
 				<action>
-					test: f.test,
+					t12: t.t12,
+					player_score: f.player_score,
+					player_matches: f.player_matches,
 					all_matches: f.all_matches;
 
-					//def allMatchesList = all_matches.value.split('\n')
-					//def myMatchesList =
+					make player_score,hidden on t12 when {true}
 
-					//change test value { allMatchesList }
+					change player_matches options {
+						def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email).and(it.value.defaultValue.contains("true"))}.collect{ it.key }
+						return all_matches.options.subMap(keys);
+					}
+				</action>
+			</actions>
+		</event>
+		<event type="cancel">
+			<id>t12_cancel</id>
+			<actions phase="pre">
+				<action>
+					player_matches: f.player_matches,
+					player_score: f.player_score;
 
-
+					change player_matches options {[:]}
+					change player_score value { null }
 				</action>
 			</actions>
 		</event>
