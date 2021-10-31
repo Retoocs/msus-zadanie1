@@ -525,6 +525,7 @@
 			<id>t10_finish</id>
 			<actions phase="pre">
 				<action>
+					finished_matches_count: f.finished_matches_count,
 					generated_count: f.generated_count,
 					match_counter: f.match_counter,
 					tournament_capacity: f.tournament_capacity,
@@ -555,6 +556,7 @@
 						};
 					}
 					change generated_count value { match_counter.value }
+					change finished_matches_count value { match_counter.value }
 				</action>
 			</actions>
 		</event>
