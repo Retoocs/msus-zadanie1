@@ -82,9 +82,10 @@
 	<data type="enumeration">
 		<id>tournament_capacity</id>
 		<title>Total number of players</title>
+		<values>2</values>
 		<values>8</values>
 		<values>16</values>
-		<init>8</init>
+		<init>2</init>
 	</data>
 	<data type="enumeration">
 		<id>tournament_type</id>
@@ -498,6 +499,34 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t10_finish</id>
+			<actions phase="pre">
+				<action>
+					match_counter: f.match_counter,
+					tournament_capacity: f.tournament_capacity,
+					registered_players: f.registered_players,
+					all_matches: f.all_matches;
+
+					def registeredPlayerMails = registered_players.choices.collect{ it.defaultValue }
+					numberOfPlayers = registeredPlayerMails.size()
+
+					// id : p1, p2, p1_score, p2_score, isClosed, winner, looser
+
+					def tmpAllMatches = ""
+
+					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
+						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
+							def row = (int)match_counter.value + ":" + registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + "," + "\n"
+							tmpAllMatches = tmpAllMatches + row
+							change match_counter value { match_counter.value + 1}
+						}
+					}
+
+					change all_matches value { tmpAllMatches }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t12</id>
@@ -845,6 +874,12 @@
 			</dataRef>
 			<dataRef>
 				<id>registered_players</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>all_matches</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
