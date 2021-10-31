@@ -580,6 +580,7 @@
 						t12: t.t12,
 						player_score: f.player_score;
 
+						make player_score,required on t12 when {true}
 						make player_score,editable on t12 when {true}
 					</action>
 				</logic>
@@ -601,6 +602,7 @@
 					player_matches_view: f.player_matches_view,
 					all_matches: f.all_matches;
 
+					make player_score,required on t12 when {true}
 					make player_score,hidden on t12 when {true}
 
 					def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email).and(it.value.defaultValue.contains("true"))}.collect{ it.key }
@@ -1358,7 +1360,7 @@
 		<type>regular</type>
 		<sourceId>t10</sourceId>
 		<destinationId>p11</destinationId>
-		<multiplicity>2</multiplicity>
+		<multiplicity>0</multiplicity>
 		<reference>generated_count</reference>
 	</arc>
 	<arc>
@@ -1547,7 +1549,6 @@
 		<sourceId>t12</sourceId>
 		<destinationId>p21</destinationId>
 		<multiplicity>1</multiplicity>
-		<breakPoint><x>1260</x><y>708</y></breakPoint>
 	</arc>
 	<arc>
 		<id>a55</id>
@@ -1583,13 +1584,19 @@
 		<sourceId>p21</sourceId>
 		<destinationId>t12</destinationId>
 		<multiplicity>1</multiplicity>
-		<breakPoint><x>1265</x><y>768</y></breakPoint>
 	</arc>
 	<arc>
 		<id>a60</id>
 		<type>inhibitor</type>
 		<sourceId>p23</sourceId>
 		<destinationId>t12</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>a61</id>
+		<type>read</type>
+		<sourceId>p3</sourceId>
+		<destinationId>t16</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>
 </document>
