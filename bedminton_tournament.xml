@@ -170,6 +170,18 @@
 		<id>close_id_request</id>
 		<title>close_id_request</title>
 	</data>
+	<data type="number">
+		<id>stats_all_matches</id>
+		<title>Number of all matches</title>
+	</data>
+	<data type="number">
+		<id>stats_played</id>
+		<title>Number of played matches</title>
+	</data>
+	<data type="number">
+		<id>stats_unplayed</id>
+		<title>Number of unplayed matches</title>
+	</data>
 	<data type="text">
 		<id>test</id>
 		<title>test</title>
@@ -974,6 +986,58 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<dataGroup>
+			<id>DataGroup</id>
+			<dataRef>
+				<id>stats_all_matches</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>stats_played</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+			</dataRef>
+			<dataRef>
+				<id>stats_unplayed</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>t22_assign</id>
+			<actions phase="pre">
+				<action>
+					all_matches: f.all_matches,
+					all: f.stats_all_matches,
+					played: f.stats_played,
+					unplayed: f.stats_unplayed;
+
+					def tmpAll = 0
+					def tmpPlayed = 0
+					def tmpUnplayed = 0
+
+					if(all_matches.options != null){
+						def allMatches = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+						tmpAll = allMatches.size()
+
+						for(entry in allMatches){
+							if(entry.value.split(',')[4] == "true")
+								tmpUnplayed++
+							if(entry.value.split(',')[4] == "false")
+								tmpPlayed++
+						}
+					}
+
+					change all value { return tmpAll; }
+					change played value { return tmpPlayed; }
+					change unplayed value { return tmpUnplayed; }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t23</id>
