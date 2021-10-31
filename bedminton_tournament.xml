@@ -513,13 +513,13 @@
 					def registeredPlayerMails = registered_players.choices.collect{ it.defaultValue }
 					numberOfPlayers = registeredPlayerMails.size()
 
-					// id : p1, p2, p1_score, p2_score, isClosed, winner, looser
+					// id : p1,p2,p1_score,p2_score,active,winner,looser
 
 					def tmpAllMatches = ""
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def row = (int)match_counter.value + ":" + registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + "," + "\n"
+							def row = (int)match_counter.value + ":" + registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",0,0,true," + "\n"
 							tmpAllMatches = tmpAllMatches + row
 							change match_counter value { match_counter.value + 1}
 						}
