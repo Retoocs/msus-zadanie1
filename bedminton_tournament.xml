@@ -373,7 +373,7 @@
 					registered_players: f.registered_players;
 
 					if(registered_players.choices.collect{ it.defaultValue }.contains(loggedUser().email)){
-						throw new IllegalArgumentException("Uz ste zaregistrovany!")
+						throw new IllegalArgumentException("You are already registered!")
 					}
 				</action>
 			</actions>
