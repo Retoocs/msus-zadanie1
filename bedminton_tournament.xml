@@ -101,43 +101,33 @@
 	</data>
 	<data type="taskRef">
 		<id>tournament_informations</id>
-		<title></title>
+		<title/>
 		<init>t25</init>
 	</data>
 	<data type="text">
 		<id>delete_confirmation</id>
-		<title></title>
+		<title/>
 		<init>Confirm to delete the tournament</init>
 	</data>
 	<data type="number">
 		<id>player_played_matches</id>
 		<title>Played matches</title>
 		<init>0</init>
-		<action trigger="get">
-			total: f.this;
-			
-			change total value { return loggedUser().email.size() }
-		</action>
+	</data>
+	<data type="number">
+		<id>player_unplayed_matches</id>
+		<title>Unplayed matches</title>
+		<init>0</init>
 	</data>
 	<data type="number">
 		<id>player_won_matches</id>
 		<title>Won matches</title>
 		<init>0</init>
-		<action trigger="get">
-			won: f.this;
-			
-			change won value { return loggedUser().email.size() }
-		</action>
 	</data>
 	<data type="number">
 		<id>player_lost_matches</id>
 		<title>Lost matches</title>
 		<init>0</init>
-		<action trigger="get">
-			lost: f.this;
-			
-			change lost value { return loggedUser().email.size() }
-		</action>
 	</data>
 	<data type="enumeration">
 		<id>player_matches_view</id>
@@ -453,68 +443,70 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>player_played_matches</id>
 				<logic>
 					<behavior>visible</behavior>
 				</logic>
-				<layout>
-					<x>0</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>1</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
+			</dataRef>
+			<dataRef>
+				<id>player_unplayed_matches</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
 			</dataRef>
 			<dataRef>
 				<id>player_won_matches</id>
 				<logic>
 					<behavior>visible</behavior>
 				</logic>
-				<layout>
-					<x>1</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>1</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
 			</dataRef>
 			<dataRef>
 				<id>player_lost_matches</id>
 				<logic>
 					<behavior>visible</behavior>
 				</logic>
-				<layout>
-					<x>2</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>1</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>player_matches_view</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>1</y>
-					<rows>3</rows>
-					<cols>3</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>t9_assign</id>
+			<actions phase="pre">
+				<action>
+					player_played_matches: f.player_played_matches,
+					player_unplayed_matches: f.player_unplayed_matches,
+					player_won_matches: f.player_won_matches,
+					player_lost_matches: f.player_lost_matches,
+					all_matches: f.all_matches;
+
+					def tmpPlayed = 0
+					def tmpUnplayed = 0
+					def tmpWon = 0
+					def tmpLost = 0
+
+					if(all_matches.options != null){
+						def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email)}.collect{ it.key }
+						def tmpPlayerMatches = all_matches.options.subMap(keys).collectEntries{key, value -> [key, value.defaultValue]}
+
+						for(entry in tmpPlayerMatches){
+							splitValue = entry.value.split(',')
+							if(splitValue[4] == "true")
+								tmpUnplayed++
+							if(splitValue[4] == "false")
+								tmpPlayed++
+							if(splitValue[5] == loggedUser().email)
+								tmpWon++
+							if(splitValue[6] == loggedUser().email)
+								tmpLost++
+						}
+					}
+
+					change player_lost_matches value { return tmpLost; }
+					change player_played_matches value { return tmpPlayed; }
+					change player_unplayed_matches value { return tmpUnplayed; }
+					change player_won_matches value { return tmpWon; }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t10</id>
@@ -551,7 +543,7 @@
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",1,tbd,true,"
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",1,tbd,true,tbd,tbd"
 							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
 
@@ -1070,10 +1062,12 @@
 
 					valueArray[4] = "false"
 					if(Integer.valueOf(valueArray[2]) > Integer.valueOf(valueArray[3])){
-						valueArray = valueArray + [valueArray[0], valueArray[1]]
+						valueArray[5] = valueArray[0]
+						valueArray[6] = valueArray[1]
 					}
 					else{
-						valueArray = valueArray + [valueArray[1], valueArray[0]]
+						valueArray[5] = valueArray[1]
+						valueArray[6] = valueArray[0]
 					}
 
 					def editedValue = valueArray.join(',')
