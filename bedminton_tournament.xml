@@ -143,10 +143,9 @@
 		<id>player_matches</id>
 		<title>Your matches</title>
 	</data>
-	<data type="text">
+	<data type="enumeration_map">
 		<id>all_matches</id>
 		<title>all_matches</title>
-		<values>area</values>
 	</data>
 	<data type="number">
 		<id>match_counter</id>
@@ -156,10 +155,21 @@
 	<data type="enumeration">
 		<id>registered_players</id>
 		<title>Registrovany hraci</title>
+		<values>A</values>
+		<values>B</values>
+		<values>C</values>
+		<values>D</values>
+		<values>E</values>
+		<values>F</values>
+		<values>G</values>
 	</data>
 	<data type="text">
 		<id>requester</id>
 		<title>requester</title>
+	</data>
+	<data type="text">
+		<id>test</id>
+		<title>test</title>
 	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
@@ -515,18 +525,25 @@
 
 					// id : p1,p2,p1_score,p2_score,active,winner,looser
 
-					def tmpAllMatches = ""
+					def tmpList = []
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def row = (int)match_counter.value + ":" + registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",0,0,true," + "\n"
-							tmpAllMatches = tmpAllMatches + row
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",0,0,true,"
+							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
+
+							tmpList = tmpList + [key + ":" + value]
 						}
 					}
 
+					change all_matches options {
+						return tmpList.collectEntries{
+							def entry = it.split(':')
+							[(entry[0]): entry[1]]
+						};
+					}
 					change generated_count value { match_counter.value }
-					change all_matches value { tmpAllMatches }
 				</action>
 			</actions>
 		</event>
@@ -545,6 +562,31 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<dataGroup>
+			<id>DataGroup</id>
+			<dataRef>
+				<id>test</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>t12_assign</id>
+			<actions phase="pre">
+				<action>
+					test: f.test,
+					all_matches: f.all_matches;
+
+					//def allMatchesList = all_matches.value.split('\n')
+					//def myMatchesList =
+
+					//change test value { allMatchesList }
+
+
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t14</id>
