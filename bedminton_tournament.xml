@@ -139,8 +139,8 @@
 			change lost value { return loggedUser().email.size() }
 		</action>
 	</data>
-	<data type="enumeration_map">
-		<id>player_matches</id>
+	<data type="enumeration">
+		<id>player_matches_view</id>
 		<title>Your matches</title>
 	</data>
 	<data type="number">
@@ -166,10 +166,15 @@
 		<values>E</values>
 		<values>F</values>
 		<values>G</values>
+		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="text">
 		<id>requester</id>
 		<title>requester</title>
+	</data>
+	<data type="text">
+		<id>close_id_request</id>
+		<title>close_id_request</title>
 	</data>
 	<data type="text">
 		<id>test</id>
@@ -186,6 +191,7 @@
 		</layout>
 		<label>Create tournament</label>
 		<assignPolicy>auto</assignPolicy>
+
 		<roleRef>
 			<id>system</id>
 			<logic>
@@ -484,7 +490,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>player_matches</id>
+				<id>player_matches_view</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -534,7 +540,7 @@
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",tbd,tbd,true,"
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",1,tbd,true,"
 							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
 
@@ -570,11 +576,11 @@
 		<dataGroup>
 			<id>DataGroup</id>
 			<dataRef>
-				<id>player_matches</id>
+				<id>player_matches_view</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 					<action trigger="set">
-						player_matches: f.this,
 						t12: t.t12,
 						player_score: f.player_score;
 
@@ -596,15 +602,16 @@
 				<action>
 					t12: t.t12,
 					player_score: f.player_score,
-					player_matches: f.player_matches,
+					player_matches_view: f.player_matches_view,
 					all_matches: f.all_matches;
 
 					make player_score,hidden on t12 when {true}
 
-					change player_matches options {
-						def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email).and(it.value.defaultValue.contains("true"))}.collect{ it.key }
-						return all_matches.options.subMap(keys);
-					}
+					def keys = all_matches.options.findAll{it.value.defaultValue.contains(loggedUser().email).and(it.value.defaultValue.contains("true"))}.collect{ it.key }
+					def tmpPlayerMatches = all_matches.options.subMap(keys)
+					def tmpList = tmpPlayerMatches.collect{ it.key + ":  " + (it.value.defaultValue.split(',')[0]) + " vs " + (it.value.defaultValue.split(',')[1]) }
+
+					change player_matches_view choices { tmpList }
 				</action>
 			</actions>
 		</event>
@@ -612,10 +619,108 @@
 			<id>t12_cancel</id>
 			<actions phase="pre">
 				<action>
-					player_matches: f.player_matches,
+					player_matches_view: f.player_matches_view,
 					player_score: f.player_score;
 
-					change player_matches options {[:]}
+					change player_matches_view choices {[]}
+					change player_matches_view value { null }
+					change player_score value { null }
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>t26</id>
+		<x>1380</x>
+		<y>620</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Process the input [auto]</label>
+		<trigger type="auto"/>
+		<roleRef>
+			<id>system</id>
+			<logic>
+				<perform>true</perform>
+			</logic>
+		</roleRef>
+		<event type="finish">
+			<id>t26_finish</id>
+			<actions phase="pre">
+				<action>
+					all_matches: f.all_matches,
+					player_matches_view: f.player_matches_view,
+					player_score: f.player_score;
+
+					def selectedKey = player_matches_view.value?.defaultValue.split(':')[0]
+					def toEditMap = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+
+					def valueArray = toEditMap[selectedKey].split(',')
+
+					if(valueArray[0] == loggedUser().email){
+						valueArray[2] = (int)player_score.value
+					}
+					else if(valueArray[1] == loggedUser().email){
+						valueArray[3] = (int)player_score.value
+					}
+
+					def editedValue = valueArray.join(',')
+
+					toEditMap[selectedKey] = editedValue
+
+					change all_matches options { toEditMap }
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>t27</id>
+		<x>980</x>
+		<y>620</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Reinitialize input data [auto]</label>
+		<trigger type="auto"/>
+		<roleRef>
+			<id>system</id>
+			<logic>
+				<perform>true</perform>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup</id>
+			<dataRef>
+				<id>test</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>t27_finish</id>
+			<actions phase="post">
+				<action>
+					close_id_request: f.close_id_request,
+					all_matches: f.all_matches,
+					player_matches_view: f.player_matches_view,
+					player_score: f.player_score;
+
+					def selectedKey = player_matches_view.value?.defaultValue.split(':')[0]
+
+					def p1_score = all_matches.options[selectedKey].defaultValue.split(',')[2]
+					def p2_score = all_matches.options[selectedKey].defaultValue.split(',')[3]
+
+					if( (p1_score != "tbd").and(p2_score != "tbd") ){
+						change close_id_request value { selectedKey }
+						async.run{
+							assignTask("t23")
+							finishTask("t23")
+						}
+					}
+
+					change player_matches_view choices {[]}
+					change player_matches_view value { null }
 					change player_score value { null }
 				</action>
 			</actions>
@@ -884,6 +989,40 @@
 				<perform>true</perform>
 			</logic>
 		</roleRef>
+		<event type="finish">
+			<id>t23_finish</id>
+			<actions phase="pre">
+				<action>
+					close_id_request: f.close_id_request,
+					all_matches: f.all_matches;
+
+					def toEditMap = all_matches.options.collectEntries{key, value -> [key, value.defaultValue]}
+
+					def valueArray = toEditMap[close_id_request.value].split(',')
+
+					valueArray[4] = "false"
+					if(Integer.valueOf(valueArray[2]) > Integer.valueOf(valueArray[3])){
+						valueArray = valueArray + [valueArray[0], valueArray[1]]
+					}
+					else{
+						valueArray = valueArray + [valueArray[1], valueArray[0]]
+					}
+
+					def editedValue = valueArray.join(',')
+
+					toEditMap[close_id_request.value] = editedValue
+
+					change all_matches options { toEditMap }
+				</action>
+			</actions>
+			<actions phase="post">
+				<action>
+					close_id_request: f.close_id_request;
+
+					change close_id_request value { null }
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>t24</id>
@@ -963,38 +1102,6 @@
 				</logic>
 			</dataRef>
 		</dataGroup>
-	</transition>
-	<transition>
-		<id>t26</id>
-		<x>1380</x>
-		<y>620</y>
-		<layout>
-			<offset>0</offset>
-		</layout>
-		<label>Process the input [auto]</label>
-<!--		<trigger type="auto"/>-->
-		<roleRef>
-			<id>system</id>
-			<logic>
-				<perform>true</perform>
-			</logic>
-		</roleRef>
-	</transition>
-	<transition>
-		<id>t27</id>
-		<x>980</x>
-		<y>620</y>
-		<layout>
-			<offset>0</offset>
-		</layout>
-		<label>Reinitialize input data [auto]</label>
-<!--		<trigger type="auto"/>-->
-		<roleRef>
-			<id>system</id>
-			<logic>
-				<perform>true</perform>
-			</logic>
-		</roleRef>
 	</transition>
 	<!-- PLACES -->
 	<place>
