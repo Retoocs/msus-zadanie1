@@ -24,7 +24,7 @@
 		<id>organizator</id>
 		<caseLogic>
 			<create>true</create>
-<!--			<delete>true</delete>-->
+			<delete>true</delete>
 			<view>true</view>
 		</caseLogic>
 	</roleRef>
@@ -156,7 +156,6 @@
 			<list/>
 		</view>
 		<values>fakeplayer@msus</values>
-		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="button">
 		<id>delete_player</id>
@@ -994,7 +993,7 @@
 		</layout>
 		<label>Check ability to generate [time]</label>
 		<trigger type="time">
-			<delay>PT10S</delay>
+			<delay>PT15S</delay>
 		</trigger>
 		<roleRef>
 			<id>system</id>
