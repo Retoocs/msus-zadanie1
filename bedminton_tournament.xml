@@ -154,8 +154,6 @@
 		<view>
 			<list/>
 		</view>
-		<values>G</values>
-		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="button">
 		<id>delete_player</id>
@@ -668,7 +666,7 @@
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",1,tbd,true,tbd,tbd"
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",tbd,tbd,true,tbd,tbd"
 							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
 
