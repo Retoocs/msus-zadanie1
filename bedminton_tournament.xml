@@ -82,12 +82,13 @@
 	<data type="enumeration">
 		<id>tournament_capacity</id>
 		<title>Total number of players</title>
+		<values>2</values>
 		<values>4</values>
 		<values>5</values>
 		<values>6</values>
 		<values>7</values>
 		<values>8</values>
-		<init>4</init>
+		<init>2</init>
 	</data>
 	<data type="enumeration">
 		<id>tournament_type</id>
@@ -154,6 +155,8 @@
 		<view>
 			<list/>
 		</view>
+		<values>fakeplayer@msus</values>
+		<values>xchvostek@stuba.sk</values>
 	</data>
 	<data type="button">
 		<id>delete_player</id>
@@ -666,7 +669,7 @@
 
 					for(int picked = 0; picked &lt; numberOfPlayers - 1; picked++){
 						for(int second = picked + 1; second &lt; numberOfPlayers; second++){
-							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",tbd,tbd,true,tbd,tbd"
+							def value = registeredPlayerMails.get(picked) + "," + registeredPlayerMails.get(second) + ",2,tbd,true,tbd,tbd"
 							def key = (int)match_counter.value
 							change match_counter value { match_counter.value + 1}
 
